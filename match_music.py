@@ -40,42 +40,46 @@ def get_keywords(filename):
     return ' '.join(elements)
 
 
-def extract_artist_title(filename):
-    try:
-        s = filename.split(' - ', 2)
-        return (s[0], s[1])
-    except:
-        return (None, filename)
+def standardize_music_name(music):
+    s = music.split(' - ')
+    if len(s) == 1:
+        return music
+
+    artist = s[0]
+    title = s[1]
+
+    artist = ' '.join(sorted(artist.split(' ')))
+    return '{} - {}'.format(artist, title)
 
 
-def auto_match_netease_entry(songs, artist, title):
+def auto_match_netease_entry(songs, target_music):
+    target_music = standardize_music_name(target_music)
+
     for song in songs:
         artists = [x['name'] for x in song['artists']]
         name = song['name']
 
-        if artist != None and not all([a in artist for a in artists]):
-            continue
-
-        if name.strip().lower() != title.strip().lower():
-            continue
-
-        return [song]
+        this_name = standardize_music_name(
+            '{} - {}'.format(' '.join(artists), name))
+        if this_name == target_music:
+            return [song]
 
     return []
 
 
-def select_netease_entry(songs, music, target_artist, target_title):
+def select_netease_entry(songs, music):
     print_state('MANUAL', music)
     print()
 
-    def distance(song):
-        artists = ' '.join([x['name'] for x in song['artists']])
-        artists_sorted = ' '.join(sorted(artists.split(' ')))
-        target_artist_sorted = ' '.join(sorted(target_artist.split(' ')))
+    target_music = standardize_music_name(music)
 
+    def distance(song):
+        artists = [x['name'] for x in song['artists']]
         name = song['name']
-        return levenshtein_distance(artists_sorted + ' - ' + name,
-                                    target_artist_sorted + ' - ' + target_title)
+
+        this_name = standardize_music_name(
+            '{} - {}'.format(' '.join(artists), name))
+        return levenshtein_distance(this_name, target_music)
 
     songs = sorted(songs, key=distance)
     for i, song in enumerate(songs):
@@ -95,7 +99,8 @@ def select_netease_entry(songs, music, target_artist, target_title):
     return [songs[id]]
 
 
-def search_netease(keywords, music, artist, title, interactive):
+def search_netease(keywords, music, interactive):
+    # print('\nKeywords: {}'.format(keywords))
     url = 'https://music.163.com/api/search/get/'
     params = {'s': keywords, 'type': 1, 'limit': 50}
     response = requests.get(url, params=params)
@@ -112,13 +117,13 @@ def search_netease(keywords, music, artist, title, interactive):
 
     response = response['result']['songs']
     if len(response) > 1:
-        auto_match = auto_match_netease_entry(response, artist, title)
+        auto_match = auto_match_netease_entry(response, music)
         if len(auto_match) > 0:
             return auto_match
 
     # Allow skipping uncertain music on first pass
     if len(response) > 1 and interactive:
-        return select_netease_entry(response, music, artist, title)
+        return select_netease_entry(response, music)
 
     return response
 
@@ -131,7 +136,7 @@ if __name__ == '__main__':
     musics = get_music(sys.argv[1])
     interactive_queue = []
 
-    records = MusicMatchRecords('music_match_records.json')
+    records = MusicMatchRecords(sys.argv[1] + '/music_match_records.json')
 
     def process_music(music, interactive):
         if records.has(music):
@@ -141,9 +146,8 @@ if __name__ == '__main__':
         time.sleep(0.5)
         print_state('SEARCH', music)
 
-        artist, title = extract_artist_title(music)
         kw = get_keywords(music)
-        song = search_netease(kw, music, artist, title, interactive)
+        song = search_netease(kw, music, interactive)
 
         if song is None or len(song) == 0:
             print_state('EMPTY', music)
@@ -159,14 +163,14 @@ if __name__ == '__main__':
         records.update(music, song['id'])
         print_state('DONE', music)
 
-    # for music in musics:
-    #     process_music(music, False)
-    #     print()
-
-    # for music in interactive_queue:
-    #     process_music(music, True)
-    #     print()
-
     for music in musics:
+        process_music(music, False)
+        print()
+
+    for music in interactive_queue:
         process_music(music, True)
         print()
+
+    # for music in musics:
+    #     process_music(music, True)
+    #     print()

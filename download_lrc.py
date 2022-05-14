@@ -147,10 +147,9 @@ if __name__ == '__main__':
         exit(1)
 
     musics = get_music(sys.argv[1])
-    records = MusicMatchRecords('music_match_records.json')
+    records = MusicMatchRecords(sys.argv[1] + '/music_match_records.json')
 
-    # output = LrcOutput(sys.argv[1])
-    output = LrcOutput('output/')
+    output = LrcOutput(sys.argv[1])
 
     for music in musics:
         if not records.has(music):
@@ -158,10 +157,15 @@ if __name__ == '__main__':
         if output.has_lrc(music):
             continue
 
-        time.sleep(0.5)
-
         print_state('DOWNLOAD', music)
-        lrc = get_lrc(records.get(music))
+        id = records.get(music)
+        if id == -1:
+            output.no_lrc(music)
+            print_state('NONE', music)
+            continue
+
+        time.sleep(0.5)
+        lrc = get_lrc(id)
 
         if lrc == '' or lrc is None:
             output.no_lrc(music)
@@ -169,3 +173,5 @@ if __name__ == '__main__':
         else:
             output.write_lrc(music, lrc)
             print_state('DONE', music)
+
+        print()
