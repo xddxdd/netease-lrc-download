@@ -1,5 +1,9 @@
 # 网易云 LRC 歌词下载工具
 
+## 依赖
+
+Python 3 以及 [requests](https://requests.readthedocs.io/en/latest/)。
+
 ## 用法
 
 1. 运行 `python3 match_music.py [你的音乐目录]`，例如 `python3 match_music.py ~/Music`
@@ -23,3 +27,7 @@
    - 如果这首歌有双语歌词，程序会自动合并它们
      - 但合并算法非常初级，需要双语歌词的时间戳完全相同，无法处理少数双语时间戳不同步的歌曲
    - 如果需要重新下载歌词，请手动删除对应歌词文件，然后重新运行 `download_lrc.py`
+
+## 许可协议
+
+公有领域（Public Domain）。
