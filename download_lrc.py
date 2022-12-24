@@ -41,8 +41,7 @@ def parse_lrc(lrc):
             r = re.match(r'^\[(\d{2}):(\d{2})\.(\d{2})\](.+)$', line)
 
         # Remove punctuations at beginning & end
-        line = re.sub(r'^[^\w]+', '', line)
-        line = re.sub(r'[^\w]+$', '', line)
+        line = re.sub(r'^[^\w](.*)[^\w]+$', r'\1', line)
 
         for t in timestamps:
             result[t] = line
