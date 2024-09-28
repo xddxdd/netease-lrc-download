@@ -4,27 +4,8 @@ import requests
 import sys
 import time
 
-from lib import get_music, MusicMatchRecords, print_state
+from lib import get_music, LrcOutput, MusicMatchRecords, print_state
 
-
-class LrcOutput:
-    def __init__(self, folder):
-        self.folder = folder
-
-    def has_lrc(self, music):
-        lrc_filename = self.folder + '/' + music + '.lrc'
-        nolrc_filename = self.folder + '/' + music + '.nolrc'
-        return os.path.exists(lrc_filename) or os.path.exists(nolrc_filename)
-
-    def write_lrc(self, music, lrc):
-        filename = self.folder + '/' + music + '.lrc'
-        with open(filename, 'w') as f:
-            f.write(lrc)
-
-    def no_lrc(self, music):
-        filename = self.folder + '/' + music + '.nolrc'
-        with open(filename, 'w') as f:
-            f.write('PLACEHOLDER')
 
 
 def parse_lrc(lrc):
