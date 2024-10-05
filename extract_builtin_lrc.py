@@ -34,8 +34,8 @@ def get_lyric(filename: str) -> Optional[str]:
             if line.endswith("\\"):
                 lyric_text += line[:-1] + "\n"
             else:
-                lyric_text += line
-                state == "DONE"
+                lyric_text += line + "\n"
+                state = "DONE"
         if state == "DONE":
             break
     return lyric_text if lyric_text else None
@@ -45,7 +45,8 @@ def check_music(output: LrcOutput, music):
     print_state("EXTRACT", music)
     lyric = get_lyric(os.path.join(sys.argv[1], music))
     if lyric:
-        output.write_lrc(music, lyric)
+        music_name = ".".join(music.split(".")[:-1])
+        output.write_lrc(music_name, lyric)
         print_state("SAVED", music, True)
     else:
         pass
@@ -53,9 +54,9 @@ def check_music(output: LrcOutput, music):
 
 
 if __name__ == "__main__":
-    # if len(sys.argv) < 2:
-    #     print("Usage: {} <folder>".format(sys.argv[0]))
-    #     exit(1)
+    if len(sys.argv) < 2:
+        print("Usage: {} <folder>".format(sys.argv[0]))
+        exit(1)
 
     musics = get_music(sys.argv[1], True)
 
